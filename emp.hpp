@@ -22,14 +22,21 @@
 #include "../generic/Arithmetics/multinom.hpp"
 using namespace std;
 
-template <class R, class FL, bool Detraced>
+template <class UINT, UINT R, class FL, bool Detraced>
 class EMP {
-  static_assert(is_integral<R>::value && is_unsigned<R>::value, "Rank of EMP must be unsigned integral");
+  static_assert(is_integral<UINT>::value && is_unsigned<UINT>::value, "Rank of EMP must be unsigned integral");
   static_assert(is_floating_point<FL>::value, "EMP requires floating point");
   //! Number of unique elements of the EMP moments
-  constexpr size_t N = binomial(R+2u, 2u);
-  //! The array that holds the initial EMP moments
+  static constexpr UINT N = binomial(R+UINT(2), UINT(2));
+  //! Maximal rank of trace applicable to this EMP moments
+  static constexpr UINT Ntr = R % UINT(2) ? (R-UINT(1)/UINT(2) : R/UINT(2);
+  //! The EMP moments array
   array<FL,N> _EMP;
+  //! The coefficient matrix that holds the coefficients in EMP interaction
+  /**
+  * C[i][j] is the coefficient  
+  */
+  array<FL,Ntr+1> 
 };
 
 #endif   /* ----- #ifndef emp_INC  ----- */
