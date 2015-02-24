@@ -27,16 +27,18 @@ class EMP {
   static_assert(is_integral<UINT>::value && is_unsigned<UINT>::value, "Rank of EMP must be unsigned integral");
   static_assert(is_floating_point<FL>::value, "EMP requires floating point");
   //! Number of unique elements of the EMP moments
-  static constexpr UINT N = binomial(R+UINT(2), UINT(2));
+  static constexpr UINT N = binomial(R+2, 2);
   //! Maximal rank of trace applicable to this EMP moments
-  static constexpr UINT Ntr = R % UINT(2) ? (R-UINT(1)/UINT(2) : R/UINT(2);
+  static constexpr UINT Maxlm = R % 2 ? (R-1)/2 : R/2;
+  //! Min lc
+  static constexpr UINT Minlc = 0;
+  //! Max lc
+  static constexpr UINT Maxlc = R;
   //! The EMP moments array
   array<FL,N> _EMP;
-  //! The coefficient matrix that holds the coefficients in EMP interaction
-  /**
-  * C[i][j] is the coefficient  
-  */
-  array<FL,Ntr+1> 
+  
+
+
 };
 
 #endif   /* ----- #ifndef emp_INC  ----- */
