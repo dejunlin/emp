@@ -31,8 +31,8 @@ real EMPenergy (EMP1&& m, EMP2&& n, const array<real,3>& r) {
   static constexpr bool D1 = bare<EMP1>::_detraced;
   static constexpr bool D2 = bare<EMP2>::_detraced;
   static constexpr real sign = R2 % 2 ? -1 : 1;
-  static constexpr real factor1 = D1 ? 1/real(multifac(2*R1-1,2)) : 1;
-  static constexpr real factor2 = D2 ? 1/real(multifac(2*R2-1,2)) : 1;
+  static constexpr real factor1 = D1 ? 1/real(multifac(2u*R1-1u,2u)) : 1;
+  static constexpr real factor2 = D2 ? 1/real(multifac(2u*R2-1u,2u)) : 1;
   auto e = sign * factor1 * factor2 * 
            blf.template BF0<Frecp<R1+R2>>(std::forward<EMP1>(m), std::forward<EMP2>(n),r);
   return e;
@@ -47,8 +47,8 @@ array<real,3> EMPforce (EMP1&& m, EMP2&& n, const array<real,3>& r) {
   static constexpr bool D1 = bare<EMP1>::_detraced;
   static constexpr bool D2 = bare<EMP2>::_detraced;
   static constexpr real sign = (R2+1) % 2 ? -1 : 1;
-  static constexpr real factor1 = D1 ? 1/real(multifac(2*R1-1,2)) : 1;
-  static constexpr real factor2 = D2 ? 1/real(multifac(2*R2-1,2)) : 1;
+  static constexpr real factor1 = D1 ? 1/real(multifac(2u*R1-1u,2u)) : 1;
+  static constexpr real factor2 = D2 ? 1/real(multifac(2u*R2-1u,2u)) : 1;
   auto F = (sign * factor1 * factor2) *
            blf.template BF1<Frecp<R1+R2+1>>(std::forward<EMP1>(m), std::forward<EMP2>(n),r);
   return F;
@@ -63,20 +63,14 @@ array<real,3> EMPtorqm (EMP1&& m, EMP2&& n, const array<real,3>& r) {
   static constexpr bool D1 = bare<EMP1>::_detraced;
   static constexpr bool D2 = bare<EMP2>::_detraced;
   const auto bft = blf.template BFT<Frecp<R1+R2>>(std::forward<EMP1>(m), std::forward<EMP2>(n),r);
-  static constexpr real factor1 = D1 ? 1/real(multifac(2*R1-1,2)) : 1;
-  static constexpr real factor2 = D2 ? 1/real(multifac(2*R2-1,2)) : 1;
+  static constexpr real factor1 = D1 ? 1/real(multifac(2u*R1-1u,2u)) : 1;
+  static constexpr real factor2 = D2 ? 1/real(multifac(2u*R2-1u,2u)) : 1;
   static constexpr real sign = R2 % 2 ? -1 : 1;
   return real(R1) * sign * factor1 * factor2 * bft;
 }
 
 template < class EMP1, class EMP2 >
 array<real,3> EMPnumforce (EMP1&& m, EMP2&& n, const array<real,3>& r, const real& eps) {
-  using Tb = SymmetricCartesianTensorBilinearForm<bare<EMP1>,bare<EMP2>>;
-  auto blf = Tb{};
-  static constexpr size_t R1 = bare<EMP1>::_rank;
-  static constexpr size_t R2 = bare<EMP2>::_rank;
-  static constexpr bool D1 = bare<EMP1>::_detraced;
-  static constexpr bool D2 = bare<EMP2>::_detraced;
   const array<real, 3> dx = {eps/2, 0, 0};
   const array<real, 3> dy = {0, eps/2, 0};
   const array<real, 3> dz = {0, 0, eps/2};

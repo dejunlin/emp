@@ -588,7 +588,7 @@ struct SymmetricCartesianTensorBilinearForm
       static constexpr T value = 
         binomial(R1,qm) * binomial(R2,qn) * 
 	(R1 == 0 ? 1 : NpairK(R1-qm,lm)) * (R2 == 0 ? 1 : NpairK(R2-qn,ln)) * 
-	(R1 == 0 ? 1 : binomial(R1-qm-2*lm,lc)) * (R2 == 0 ? 1 : binomial(R2-qn-2*ln,lc)) * multifac(lc,1) * 
+	(R1 == 0 ? 1 : binomial(R1-qm-2u*lm,lc)) * (R2 == 0 ? 1 : binomial(R2-qn-2u*ln,lc)) * multifac(lc,1u) * 
 	(size_t{1} << (Rtot+q-k)) ; 
     };
     using Twrapper = NDArray<Arr, Fn, size_t, IndexSeq<maxlm+1, maxln+1>>;
