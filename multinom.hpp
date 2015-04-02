@@ -42,7 +42,7 @@ typename std::enable_if
 >::type
 binomial ( const TN& N, const TK& K )
 {
-  return multifac(N, 1, K)/multifac(K, 1) ;
+  return multifac(N, 1u, K)/multifac(K, 1u) ;
 }		/* -----  end of template function binomial  ----- */
 
 /**
@@ -66,7 +66,7 @@ constexpr auto trinomial ( const TN& N, const TK1& K1, const TK2& K2 )
   typename std::common_type<TN, TK1, TK2>::type
 >::type
 {
-  return multifac(N, 1, K1+K2)/(multifac(K1, 1)*multifac(K2,1));
+  return multifac(N, 1u, K1+K2)/(multifac(K1, 1u)*multifac(K2,1u));
 }		/* -----  end of template function binomial  ----- */
 
 /**
@@ -89,7 +89,7 @@ typename std::enable_if
 NpairK ( const TN& N, const TK& K )
 {
   using T = typename std::common_type<TN, TK>::type;
-  return multifac(N, 1, 2*K) / ( (T{1} << K) * multifac(K,1) );
+  return multifac(N, 1u, 2*K) / ( (T{1} << K) * multifac(K,1u) );
 }		
 
 #endif   /* ----- #ifndef multinom_INC  ----- */
