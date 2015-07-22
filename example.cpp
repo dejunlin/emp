@@ -156,6 +156,21 @@ array<real,3> EMPnumtorqm (EMP1&& m, EMP2&& n, const array<real,3>& r, const arr
   return MLG * Tlxyz;
 }
 
+template <class EMP1, class EMP2>
+real BT_Algorithm (EMP1&& m, EMP2&& n, const array<real,3>& r) {
+  static constexpr size_t R1 = bare<EMP1>::_rank;
+  static constexpr size_t R2 = bare<EMP2>::_rank;
+  static constexpr bool D1 = bare<EMP1>::_detraced;
+  static constexpr bool D2 = bare<EMP2>::_detraced;
+  static constexpr real sign = R2 % 2 ? -1 : 1;
+  static constexpr real factor1 = D1 ? 1/real(multifac(2u*R1-1u,2u)) : 1;
+  static constexpr real factor2 = D2 ? 1/real(multifac(2u*R2-1u,2u)) : 1;
+
+  auto e = sign * factor1 * factor2 * ;
+  return e;
+}
+
+
 int main(int argc, char* argv[]) {
   const real eps = atof(argv[1]);
   
@@ -174,5 +189,7 @@ int main(int argc, char* argv[]) {
   cout << "Difference between Force and Num. Force is " << Fperdiff[0] << " " << Fperdiff[1] << " " << Fperdiff[2] << endl; 
   cout << "Torque on m is " << Tm[0] << " " << Tm[1] << " " << Tm[2] << endl;
   cout << "Difference between Torque and Num. Torque is " << Tperdiff[0] << " " << Tperdiff[1] << " " << Tperdiff[2] << endl; 
+  
+  //simple comparison between this algorithm and the one on J. Chem. Phys. 142, 034117 (2015)
 
 }
