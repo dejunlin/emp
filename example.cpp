@@ -5,6 +5,8 @@
 #include <array>
 #include <cmath>
 #include "NDArray.hpp"
+#include <chrono>
+#include <random>
 
 using namespace std;
 
@@ -158,65 +160,6 @@ array<real,3> EMPnumtorqm (EMP1&& m, EMP2&& n, const array<real,3>& r, const arr
   return MLG * Tlxyz;
 }
 
-template <class EMP1, class EMP2>
-real BT_Algorithm (EMP1&& m, EMP2&& n, const array<real,3>& r) {
-  static constexpr size_t R1 = bare<EMP1>::_rank;
-  static constexpr size_t R2 = bare<EMP2>::_rank;
-  static constexpr size_t R = R1+R2;
-  static constexpr real sign = R2 % 2 ? -1 : 1;
-/*   static constexpr real factor1 = D1 ? 1/real(multifac(2u*R1-1u,2u)) : 1;
- *   static constexpr real factor2 = D2 ? 1/real(multifac(2u*R2-1u,2u)) : 1;
- */
-  using GradTensor = SymmetricCartesianTensor<array, real, R, true>;
-  GradTensor M;
-  const real r2 = r[0]*r[0] + r[1]*r[1] + r[2]*r[2];
-  const real r1 = sqrt(r2);
-  cout << "r = " << r[0] << "," << r[1] << "," << r[2] << endl;
-  M[{0u,0u,0u}] = 1/r1;
-  cout << "0,0,0 = " << M[{0u,0u,0u}] << endl;
-  for(size_t i = 0; i < M.N; ++i) { cout << "M["<<i<<"] = " << M[i] << ", "; }
-  cout << endl;
-  //here we loop over the tensor and fill it out recursively acoording to eq 22
-  for(size_t nx = 0; nx <= R; ++nx) {
-    const size_t nxm1 = nx == 0 ? 0 : nx-1;
-    const size_t nxm2 = nx < 2 ?  0 : nx-2;
-    for(size_t ny = 0; ny <= R-nx; ++ny) {
-      const size_t nym1 = ny == 0 ? 0 : ny-1;
-      const size_t nym2 = ny < 2 ?  0 : ny-2;
-      for(size_t nz = 0; nz <= R-nx-ny; ++nz) {
-	const size_t p = nx + ny + nz;
-        if(p == 0) continue;
-        const size_t nzm1 = nz == 0 ? 0 : nz-1;
-        const size_t nzm2 = nz < 2 ?  0 : nz-2;
-        const real s = p;
-	const real sr = 1/s;
-
-        cout << nx << "," << ny << "," << nz << endl;     
-/* 	cout << M[{nxm1,ny,nz}] << endl;
- * 	cout << M[{nx,nym1,nz}] << endl;
- * 	cout << M[{nx,ny,nzm1}] << endl;
- * 	cout << endl;
- * 	cout << M[{nxm2,ny,nz}] << endl;
- * 	cout << M[{nx,nym2,nz}] << endl;
- * 	cout << M[{nx,ny,nzm2}] << endl;
- */
-
-        M[{nx,ny,nz}] = 1/r2 * 
-        ( (sr-2) * ( nx*r[0]*M[{nxm1,ny,nz}] + ny*r[1]*M[{nx,nym1,nz}] + nz*r[2]*M[{nx,ny,nzm1}] )  
-         +(sr-1) * ( nx*nxm1*M[{nxm2,ny,nz}] + ny*nym1*M[{nx,nym2,nz}] + nz*nzm1*M[{nx,ny,nzm2}] ) );
-        cout << nx << "," << ny << "," << nz << " = " << M[{nx,ny,nz}] << endl;     
-        for(size_t i = 0; i < M.N; ++i) { cout << "M["<<i<<"] = " << M[i] << " "; }
-        cout << endl;
-      }
-    }
-  }
-  //compute the bilinear form
-  const auto contr = m*M*n;
-  auto e = sign * contr[0];
-  return e;
-}
-
-
 int main(int argc, char* argv[]) {
   const real eps = atof(argv[1]);
   
@@ -235,10 +178,4 @@ int main(int argc, char* argv[]) {
   cout << "Difference between Force and Num. Force is " << Fperdiff[0] << " " << Fperdiff[1] << " " << Fperdiff[2] << endl; 
   cout << "Torque on m is " << Tm[0] << " " << Tm[1] << " " << Tm[2] << endl;
   cout << "Difference between Torque and Num. Torque is " << Tperdiff[0] << " " << Tperdiff[1] << " " << Tperdiff[2] << endl; 
-  
-  cout << endl;
-  //simple comparison between this algorithm and the one on J. Chem. Phys. 142, 034117 (2015)
-  SymmetricCartesianTensor<array, real, 1, false> d1 = {1,2,3};
-  SymmetricCartesianTensor<array, real, 1, false> d2 = {1,2,3};
-  cout << "Energy from the BT algorithm is: " << BT_Algorithm(d1,d2,r) << endl;
 }
