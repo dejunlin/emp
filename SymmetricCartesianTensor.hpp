@@ -137,6 +137,10 @@ struct SymmetricCartesianTensor {
     //nx = tricon[0], ny = tricon[1], nz = tricon[2], k = R - nx
     return binomial(R-tricon[0]+1u, 2u) + ((R-tricon[0]) % 2 ? tricon[2] : tricon[1]); 
   };
+
+  //! Overload the accessor so that we can refer to an element via a tricon
+  const Elem& operator[](Tricon tri) const { return _data[ tricon2index(tri) ]; }
+  Elem& operator[](Tricon tri) { return _data[ tricon2index(tri) ]; }
   
   //! Helper class for initializing _g
   template <class, size_t> struct gMaker;
