@@ -1,3 +1,24 @@
+/*
+ * =====================================================================================
+ *
+ *       Filename:  example.cpp
+ *
+ *    Description:  generate 100 random monopole, dipole, quadrupole, octupol
+ *    and hexadecapole at random positions and compute the numerical forces and
+ *    torques and compare them to the analytic ones for each pair of multipoles
+ *    generated
+ *
+ *        Version:  1.0
+ *        Created:  08/20/2015 17:06:51 PM
+ *       Revision:  none
+ *       Compiler:  gcc
+ *
+ *         Author:  Dejun Lin (DL), dejun.lin@gmail.com
+ *   Organization:  Department of Biochemistry and Biophysics, Medical Center, University of Rochester
+ *
+ * =====================================================================================
+ */
+
 #include "SymmetricCartesianTensor.hpp"
 #include "minmax.hpp"
 #include "Typetraits.hpp"
@@ -160,22 +181,337 @@ array<real,3> EMPnumtorqm (EMP1&& m, EMP2&& n, const array<real,3>& r, const arr
   return MLG * Tlxyz;
 }
 
+//! check the consistency between the analytic and numerical force between a pair of EMP
+template < class EMP1, class EMP2 > 
+array<real,3> chkEMPforce(EMP1&& m, EMP2&& n, const array<real,3>& r, const real& eps) {
+      const auto F = EMPforce(forward<EMP1>(m), forward<EMP2>(n), r);
+      const auto Fnum = EMPnumforce(forward<EMP1>(m), forward<EMP2>(n), r, eps);
+      return {(F[0]-Fnum[0])/Fnum[0], (F[1]-Fnum[1])/Fnum[1], (F[2]-Fnum[2])/Fnum[2]};
+}
+
+//! check the consistency between the analytic and numerical torque (on m) between a pair of EMP
+template < class EMP1, class EMP2 > 
+array<real,3> chkEMPtorqm(EMP1&& m, EMP2&& n, const array<real,3>& r, const array<real,4>& quat, const real& eps) {
+      const auto Tm = EMPtorqm(forward<EMP1>(m), forward<EMP2>(n), r);
+      const auto Tmnum = EMPnumtorqm(forward<EMP1>(m), forward<EMP2>(n), r, quat, eps);
+      return {(Tm[0]-Tmnum[0])/Tmnum[0], (Tm[1]-Tmnum[1])/Tmnum[1], (Tm[2]-Tmnum[2])/Tmnum[2]};
+}
+
+
 int main(int argc, char* argv[]) {
-  const real eps = atof(argv[1]);
+  const real epsf = atof(argv[1]);
+  const real epst = atof(argv[2]);
   
-  const array<real,3> r = {1,2,3};
-  const array<real,4> quatm = {1,0,0,0};
-  SymmetricCartesianTensor<array, real, 4, false> m = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15};
-  SymmetricCartesianTensor<array, real, 4, false> n = {1,2,3,4,5,6,7,8,9,10,11,12,13,14,15};
-  cout << "Energy is " << EMPenergy(m, n, r) << endl;
-  const auto F = EMPforce(m, n, r);
-  const auto Fnum = EMPnumforce(m, n, r, eps);
-  decltype(F) Fperdiff = {(F[0]-Fnum[0])/Fnum[0], (F[1]-Fnum[1])/Fnum[1], (F[2]-Fnum[2])/Fnum[2]};
-  const auto Tm = EMPtorqm(m,n,r);
-  const auto Tnum = EMPnumtorqm(m, n, r, quatm, eps);
-  decltype(Tm) Tperdiff = {(Tm[0]-Tnum[0])/Tnum[0], (Tm[1]-Tnum[1])/Tnum[1], (Tm[2]-Tnum[2])/Tnum[2]};
-  cout << "Force on m is " << F[0] << " " << F[1] << " " << F[2] << endl;
-  cout << "Difference between Force and Num. Force is " << Fperdiff[0] << " " << Fperdiff[1] << " " << Fperdiff[2] << endl; 
-  cout << "Torque on m is " << Tm[0] << " " << Tm[1] << " " << Tm[2] << endl;
-  cout << "Difference between Torque and Num. Torque is " << Tperdiff[0] << " " << Tperdiff[1] << " " << Tperdiff[2] << endl; 
+  using hexdecp = SymmetricCartesianTensor<array, real, 4, false>;
+  using octp = SymmetricCartesianTensor<array, real, 3, false>;
+  using quadp = SymmetricCartesianTensor<array, real, 2, false>;
+  using dp = SymmetricCartesianTensor<array, real, 1, false>;
+  using mp = SymmetricCartesianTensor<array, real, 0, false>;
+
+  constexpr size_t N = 100;
+  array<hexdecp, N> hps;
+  array<octp, N> ops;
+  array<quadp, N> qps;
+  array<dp, N> dps;
+  array<mp, N> mps;
+  array<array<real,3>, N*5> pos;
+  const array<real,4> quatm = {1,0,0,0}; 
+
+  //randomly pick the components from uniform distribution in [0,1]
+  random_device rd;
+  mt19937 gen(rd());
+  uniform_real_distribution<> dis(0, 0.05);
+  for(size_t i = 0; i < N; ++i) {
+    for(size_t j = 0; j < hexdecp::N; ++j) {
+      hps[i][j] = dis(gen);
+    }
+    for(size_t j = 0; j < octp::N; ++j) {
+      ops[i][j] = dis(gen);
+    }
+    for(size_t j = 0; j < quadp::N; ++j) {
+      qps[i][j] = dis(gen);
+    }
+    for(size_t j = 0; j < dp::N; ++j) {
+      dps[i][j] = dis(gen);
+    }
+    for(size_t j = 0; j < mp::N; ++j) {
+      mps[i][j] = dis(gen);
+    }
+  }
+  //randomly pick the position from uniform distribution in [-5,5] in each dimension for each site
+  random_device rdpos;
+  mt19937 genpos(rdpos());
+  uniform_real_distribution<> dispos(-10, 10);
+  for(size_t i = 0; i < pos.size(); ++i) {
+    for(size_t j = 0; j < 3; ++j) {
+      pos[i][j] = dispos(genpos);
+    }
+  }
+  
+  //first check forces
+  cout << "# Difference between analytic and numerical forces (calculated with eps = "<<epsf<<" \n";
+  //monopole
+  for(size_t i = 0; i < N; ++i) {
+    //check mp-mp
+    for(size_t j = i+1; j < N; ++j) {
+      const auto diff = chkEMPforce(mps[i], mps[j], pos[i]-pos[j], epsf);
+      cout << sqrt((diff*diff)/3) << endl;
+    }
+    //check mp-dp
+    for(size_t j = 0; j < N; ++j) {
+      const auto diff = chkEMPforce(mps[i], dps[j], pos[i]-pos[j+N], epsf);
+      cout << sqrt((diff*diff)/3) << endl;
+    }
+    //check mp-quadp
+    for(size_t j = 0; j < N; ++j) {
+      const auto diff = chkEMPforce(mps[i], qps[j], pos[i]-pos[j+2*N], epsf);
+      cout << sqrt((diff*diff)/3) << endl;
+    }
+    //check mp-octp
+    for(size_t j = 0; j < N; ++j) {
+      const auto diff = chkEMPforce(mps[i], ops[j], pos[i]-pos[j+3*N], epsf);
+      cout << sqrt((diff*diff)/3) << endl;
+    }
+    //check mp-hexdecp
+    for(size_t j = 0; j < N; ++j) {
+      const auto diff = chkEMPforce(mps[i], hps[j], pos[i]-pos[j+4*N], epsf);
+      cout << sqrt((diff*diff)/3) << endl;
+    }
+  }
+
+  //dipole
+  for(size_t i = 0; i < N; ++i) {
+    //check dp-dp
+    for(size_t j = i+1; j < N; ++j) {
+      const auto diff = chkEMPforce(dps[i], dps[j], pos[i+N]-pos[j+N], epsf);
+      cout << sqrt((diff*diff)/3) << endl;
+    }
+    //check dp-mp
+    for(size_t j = 0; j < N; ++j) {
+      const auto diff = chkEMPforce(dps[i], mps[j], pos[i+N]-pos[j], epsf);
+      cout << sqrt((diff*diff)/3) << endl;
+    }
+    //check dp-quadp
+    for(size_t j = 0; j < N; ++j) {
+      const auto diff = chkEMPforce(dps[i], qps[j], pos[i+N]-pos[j+2*N], epsf);
+      cout << sqrt((diff*diff)/3) << endl;
+    }
+    //check dp-octp
+    for(size_t j = 0; j < N; ++j) {
+      const auto diff = chkEMPforce(dps[i], ops[j], pos[i+N]-pos[j+3*N], epsf);
+      cout << sqrt((diff*diff)/3) << endl;
+    }
+    //check dp-hexdecp
+    for(size_t j = 0; j < N; ++j) {
+      const auto diff = chkEMPforce(dps[i], hps[j], pos[i+N]-pos[j+4*N], epsf);
+      cout << sqrt((diff*diff)/3) << endl;
+    }
+  }
+
+  //quadrupole
+  for(size_t i = 0; i < N; ++i) {
+    //check qp-qp
+    for(size_t j = i+1; j < N; ++j) {
+      const auto diff = chkEMPforce(qps[i], qps[j], pos[i+2*N]-pos[j+2*N], epsf);
+      cout << sqrt((diff*diff)/3) << endl;
+    }
+    //check qp-mp
+    for(size_t j = 0; j < N; ++j) {
+      const auto diff = chkEMPforce(qps[i], mps[j], pos[i+2*N]-pos[j], epsf);
+      cout << sqrt((diff*diff)/3) << endl;
+    }
+    //check qp-dp
+    for(size_t j = 0; j < N; ++j) {
+      const auto diff = chkEMPforce(qps[i], dps[j], pos[i+2*N]-pos[j+N], epsf);
+      cout << sqrt((diff*diff)/3) << endl;
+    }
+    //check qp-octp
+    for(size_t j = 0; j < N; ++j) {
+      const auto diff = chkEMPforce(qps[i], ops[j], pos[i+2*N]-pos[j+3*N], epsf);
+      cout << sqrt((diff*diff)/3) << endl;
+    }
+    //check qp-hexdecp
+    for(size_t j = 0; j < N; ++j) {
+      const auto diff = chkEMPforce(qps[i], hps[j], pos[i+2*N]-pos[j+4*N], epsf);
+      cout << sqrt((diff*diff)/3) << endl;
+    }
+  }
+
+  //octupole
+  for(size_t i = 0; i < N; ++i) {
+    //check op-op
+    for(size_t j = i+1; j < N; ++j) {
+      const auto diff = chkEMPforce(ops[i], ops[j], pos[i+3*N]-pos[j+3*N], epsf);
+      cout << sqrt((diff*diff)/3) << endl;
+    }
+    //check op-mp
+    for(size_t j = 0; j < N; ++j) {
+      const auto diff = chkEMPforce(ops[i], mps[j], pos[i+3*N]-pos[j], epsf);
+      cout << sqrt((diff*diff)/3) << endl;
+    }
+    //check op-dp
+    for(size_t j = 0; j < N; ++j) {
+      const auto diff = chkEMPforce(ops[i], dps[j], pos[i+3*N]-pos[j+N], epsf);
+      cout << sqrt((diff*diff)/3) << endl;
+    }
+    //check op-quaop
+    for(size_t j = 0; j < N; ++j) {
+      const auto diff = chkEMPforce(ops[i], qps[j], pos[i+3*N]-pos[j+2*N], epsf);
+      cout << sqrt((diff*diff)/3) << endl;
+    }
+    //check op-hexdecp
+    for(size_t j = 0; j < N; ++j) {
+      const auto diff = chkEMPforce(ops[i], hps[j], pos[i+3*N]-pos[j+4*N], epsf);
+      cout << sqrt((diff*diff)/3) << endl;
+    }
+  }
+
+  //hexadecapole
+  for(size_t i = 0; i < N; ++i) {
+    //check hp-hp
+    for(size_t j = i+1; j < N; ++j) {
+      const auto diff = chkEMPforce(hps[i], hps[j], pos[i+4*N]-pos[j+4*N], epsf);
+      cout << sqrt((diff*diff)/3) << endl;
+    }
+    //check hp-mp
+    for(size_t j = 0; j < N; ++j) {
+      const auto diff = chkEMPforce(hps[i], mps[j], pos[i+4*N]-pos[j], epsf);
+      cout << sqrt((diff*diff)/3) << endl;
+    }
+    //check hp-dp
+    for(size_t j = 0; j < N; ++j) {
+      const auto diff = chkEMPforce(hps[i], dps[j], pos[i+4*N]-pos[j+N], epsf);
+      cout << sqrt((diff*diff)/3) << endl;
+    }
+    //check hp-quadp
+    for(size_t j = 0; j < N; ++j) {
+      const auto diff = chkEMPforce(hps[i], qps[j], pos[i+4*N]-pos[j+2*N], epsf);
+      cout << sqrt((diff*diff)/3) << endl;
+    }
+    //check hp-octp
+    for(size_t j = 0; j < N; ++j) {
+      const auto diff = chkEMPforce(hps[i], ops[j], pos[i+4*N]-pos[j+3*N], epsf);
+      cout << sqrt((diff*diff)/3) << endl;
+    }
+  }
+
+  //then check torques
+  cout << "# Difference between analytic and numerical torques on site m (calculated with eps = "<<epst<<" \n";
+  //monopole doesn't experience torque
+
+  //dipole
+  for(size_t i = 0; i < N; ++i) {
+    //check dp-dp
+    for(size_t j = i+1; j < N; ++j) {
+      const auto diff = chkEMPtorqm(dps[i], dps[j], pos[i+N]-pos[j+N], quatm, epst);
+      cout << sqrt((diff*diff)/3) << endl;
+    }
+    //check dp-mp
+    for(size_t j = 0; j < N; ++j) {
+      const auto diff = chkEMPtorqm(dps[i], mps[j], pos[i+N]-pos[j], quatm, epst);
+      cout << sqrt((diff*diff)/3) << endl;
+    }
+    //check dp-quadp
+    for(size_t j = 0; j < N; ++j) {
+      const auto diff = chkEMPtorqm(dps[i], qps[j], pos[i+N]-pos[j+2*N], quatm, epst);
+      cout << sqrt((diff*diff)/3) << endl;
+    }
+    //check dp-octp
+    for(size_t j = 0; j < N; ++j) {
+      const auto diff = chkEMPtorqm(dps[i], ops[j], pos[i+N]-pos[j+3*N], quatm, epst);
+      cout << sqrt((diff*diff)/3) << endl;
+    }
+    //check dp-hexdecp
+    for(size_t j = 0; j < N; ++j) {
+      const auto diff = chkEMPtorqm(dps[i], hps[j], pos[i+N]-pos[j+4*N], quatm, epst);
+      cout << sqrt((diff*diff)/3) << endl;
+    }
+  }
+
+  //quadrupole
+  for(size_t i = 0; i < N; ++i) {
+    //check qp-qp
+    for(size_t j = i+1; j < N; ++j) {
+      const auto diff = chkEMPtorqm(qps[i], qps[j], pos[i+2*N]-pos[j+2*N], quatm, epst);
+      cout << sqrt((diff*diff)/3) << endl;
+    }
+    //check qp-mp
+    for(size_t j = 0; j < N; ++j) {
+      const auto diff = chkEMPtorqm(qps[i], mps[j], pos[i+2*N]-pos[j], quatm, epst);
+      cout << sqrt((diff*diff)/3) << endl;
+    }
+    //check qp-dp
+    for(size_t j = 0; j < N; ++j) {
+      const auto diff = chkEMPtorqm(qps[i], dps[j], pos[i+2*N]-pos[j+N], quatm, epst);
+      cout << sqrt((diff*diff)/3) << endl;
+    }
+    //check qp-octp
+    for(size_t j = 0; j < N; ++j) {
+      const auto diff = chkEMPtorqm(qps[i], ops[j], pos[i+2*N]-pos[j+3*N], quatm, epst);
+      cout << sqrt((diff*diff)/3) << endl;
+    }
+    //check qp-hexdecp
+    for(size_t j = 0; j < N; ++j) {
+      const auto diff = chkEMPtorqm(qps[i], hps[j], pos[i+2*N]-pos[j+4*N], quatm, epst);
+      cout << sqrt((diff*diff)/3) << endl;
+    }
+  }
+
+  //octupole
+  for(size_t i = 0; i < N; ++i) {
+    //check op-op
+    for(size_t j = i+1; j < N; ++j) {
+      const auto diff = chkEMPtorqm(ops[i], ops[j], pos[i+3*N]-pos[j+3*N], quatm, epst);
+      cout << sqrt((diff*diff)/3) << endl;
+    }
+    //check op-mp
+    for(size_t j = 0; j < N; ++j) {
+      const auto diff = chkEMPtorqm(ops[i], mps[j], pos[i+3*N]-pos[j], quatm, epst);
+      cout << sqrt((diff*diff)/3) << endl;
+    }
+    //check op-dp
+    for(size_t j = 0; j < N; ++j) {
+      const auto diff = chkEMPtorqm(ops[i], dps[j], pos[i+3*N]-pos[j+N], quatm, epst);
+      cout << sqrt((diff*diff)/3) << endl;
+    }
+    //check op-quaop
+    for(size_t j = 0; j < N; ++j) {
+      const auto diff = chkEMPtorqm(ops[i], qps[j], pos[i+3*N]-pos[j+2*N], quatm, epst);
+      cout << sqrt((diff*diff)/3) << endl;
+    }
+    //check op-hexdecp
+    for(size_t j = 0; j < N; ++j) {
+      const auto diff = chkEMPtorqm(ops[i], hps[j], pos[i+3*N]-pos[j+4*N], quatm, epst);
+      cout << sqrt((diff*diff)/3) << endl;
+    }
+  }
+
+  //hexadecapole
+  for(size_t i = 0; i < N; ++i) {
+    //check hp-hp
+    for(size_t j = i+1; j < N; ++j) {
+      const auto diff = chkEMPtorqm(hps[i], hps[j], pos[i+4*N]-pos[j+4*N], quatm, epst);
+      cout << sqrt((diff*diff)/3) << endl;
+    }
+    //check hp-mp
+    for(size_t j = 0; j < N; ++j) {
+      const auto diff = chkEMPtorqm(hps[i], mps[j], pos[i+4*N]-pos[j], quatm, epst);
+      cout << sqrt((diff*diff)/3) << endl;
+    }
+    //check hp-dp
+    for(size_t j = 0; j < N; ++j) {
+      const auto diff = chkEMPtorqm(hps[i], dps[j], pos[i+4*N]-pos[j+N], quatm, epst);
+      cout << sqrt((diff*diff)/3) << endl;
+    }
+    //check hp-quadp
+    for(size_t j = 0; j < N; ++j) {
+      const auto diff = chkEMPtorqm(hps[i], qps[j], pos[i+4*N]-pos[j+2*N], quatm, epst);
+      cout << sqrt((diff*diff)/3) << endl;
+    }
+    //check hp-octp
+    for(size_t j = 0; j < N; ++j) {
+      const auto diff = chkEMPtorqm(hps[i], ops[j], pos[i+4*N]-pos[j+3*N], quatm, epst);
+      cout << sqrt((diff*diff)/3) << endl;
+    }
+  }
 }
