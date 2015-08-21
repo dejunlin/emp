@@ -28,6 +28,7 @@
 #include "NDArray.hpp"
 #include <chrono>
 #include <random>
+#include <iomanip>
 
 using namespace std;
 
@@ -208,7 +209,7 @@ int main(int argc, char* argv[]) {
   using dp = SymmetricCartesianTensor<array, real, 1, false>;
   using mp = SymmetricCartesianTensor<array, real, 0, false>;
 
-  constexpr size_t N = 100;
+  constexpr size_t N = 1000;
   array<hexdecp, N> hps;
   array<octp, N> ops;
   array<quadp, N> qps;
@@ -249,33 +250,39 @@ int main(int argc, char* argv[]) {
   }
   
   //first check forces
-  cout << "# Difference between analytic and numerical forces (calculated with eps = "<<epsf<<" \n";
+  cout << setprecision(13) << scientific;
+  cout << "# Difference and -log10(difference) between analytic and numerical forces (eps = "<<epsf<<") \n";
   //monopole
   for(size_t i = 0; i < N; ++i) {
     //check mp-mp
     for(size_t j = i+1; j < N; ++j) {
       const auto diff = chkEMPforce(mps[i], mps[j], pos[i]-pos[j], epsf);
-      cout << sqrt((diff*diff)/3) << endl;
+      const real rmsd = sqrt((diff*diff)/3);
+      cout << rmsd << " " << -log10(rmsd) << endl;
     }
     //check mp-dp
     for(size_t j = 0; j < N; ++j) {
       const auto diff = chkEMPforce(mps[i], dps[j], pos[i]-pos[j+N], epsf);
-      cout << sqrt((diff*diff)/3) << endl;
+      const real rmsd = sqrt((diff*diff)/3);
+      cout << rmsd << " " << -log10(rmsd) << endl;
     }
     //check mp-quadp
     for(size_t j = 0; j < N; ++j) {
       const auto diff = chkEMPforce(mps[i], qps[j], pos[i]-pos[j+2*N], epsf);
-      cout << sqrt((diff*diff)/3) << endl;
+      const real rmsd = sqrt((diff*diff)/3);
+      cout << rmsd << " " << -log10(rmsd) << endl;
     }
     //check mp-octp
     for(size_t j = 0; j < N; ++j) {
       const auto diff = chkEMPforce(mps[i], ops[j], pos[i]-pos[j+3*N], epsf);
-      cout << sqrt((diff*diff)/3) << endl;
+      const real rmsd = sqrt((diff*diff)/3);
+      cout << rmsd << " " << -log10(rmsd) << endl;
     }
     //check mp-hexdecp
     for(size_t j = 0; j < N; ++j) {
       const auto diff = chkEMPforce(mps[i], hps[j], pos[i]-pos[j+4*N], epsf);
-      cout << sqrt((diff*diff)/3) << endl;
+      const real rmsd = sqrt((diff*diff)/3);
+      cout << rmsd << " " << -log10(rmsd) << endl;
     }
   }
 
@@ -284,27 +291,32 @@ int main(int argc, char* argv[]) {
     //check dp-dp
     for(size_t j = i+1; j < N; ++j) {
       const auto diff = chkEMPforce(dps[i], dps[j], pos[i+N]-pos[j+N], epsf);
-      cout << sqrt((diff*diff)/3) << endl;
+      const real rmsd = sqrt((diff*diff)/3);
+      cout << rmsd << " " << -log10(rmsd) << endl;
     }
     //check dp-mp
     for(size_t j = 0; j < N; ++j) {
       const auto diff = chkEMPforce(dps[i], mps[j], pos[i+N]-pos[j], epsf);
-      cout << sqrt((diff*diff)/3) << endl;
+      const real rmsd = sqrt((diff*diff)/3);
+      cout << rmsd << " " << -log10(rmsd) << endl;
     }
     //check dp-quadp
     for(size_t j = 0; j < N; ++j) {
       const auto diff = chkEMPforce(dps[i], qps[j], pos[i+N]-pos[j+2*N], epsf);
-      cout << sqrt((diff*diff)/3) << endl;
+      const real rmsd = sqrt((diff*diff)/3);
+      cout << rmsd << " " << -log10(rmsd) << endl;
     }
     //check dp-octp
     for(size_t j = 0; j < N; ++j) {
       const auto diff = chkEMPforce(dps[i], ops[j], pos[i+N]-pos[j+3*N], epsf);
-      cout << sqrt((diff*diff)/3) << endl;
+      const real rmsd = sqrt((diff*diff)/3);
+      cout << rmsd << " " << -log10(rmsd) << endl;
     }
     //check dp-hexdecp
     for(size_t j = 0; j < N; ++j) {
       const auto diff = chkEMPforce(dps[i], hps[j], pos[i+N]-pos[j+4*N], epsf);
-      cout << sqrt((diff*diff)/3) << endl;
+      const real rmsd = sqrt((diff*diff)/3);
+      cout << rmsd << " " << -log10(rmsd) << endl;
     }
   }
 
@@ -313,27 +325,32 @@ int main(int argc, char* argv[]) {
     //check qp-qp
     for(size_t j = i+1; j < N; ++j) {
       const auto diff = chkEMPforce(qps[i], qps[j], pos[i+2*N]-pos[j+2*N], epsf);
-      cout << sqrt((diff*diff)/3) << endl;
+      const real rmsd = sqrt((diff*diff)/3);
+      cout << rmsd << " " << -log10(rmsd) << endl;
     }
     //check qp-mp
     for(size_t j = 0; j < N; ++j) {
       const auto diff = chkEMPforce(qps[i], mps[j], pos[i+2*N]-pos[j], epsf);
-      cout << sqrt((diff*diff)/3) << endl;
+      const real rmsd = sqrt((diff*diff)/3);
+      cout << rmsd << " " << -log10(rmsd) << endl;
     }
     //check qp-dp
     for(size_t j = 0; j < N; ++j) {
       const auto diff = chkEMPforce(qps[i], dps[j], pos[i+2*N]-pos[j+N], epsf);
-      cout << sqrt((diff*diff)/3) << endl;
+      const real rmsd = sqrt((diff*diff)/3);
+      cout << rmsd << " " << -log10(rmsd) << endl;
     }
     //check qp-octp
     for(size_t j = 0; j < N; ++j) {
       const auto diff = chkEMPforce(qps[i], ops[j], pos[i+2*N]-pos[j+3*N], epsf);
-      cout << sqrt((diff*diff)/3) << endl;
+      const real rmsd = sqrt((diff*diff)/3);
+      cout << rmsd << " " << -log10(rmsd) << endl;
     }
     //check qp-hexdecp
     for(size_t j = 0; j < N; ++j) {
       const auto diff = chkEMPforce(qps[i], hps[j], pos[i+2*N]-pos[j+4*N], epsf);
-      cout << sqrt((diff*diff)/3) << endl;
+      const real rmsd = sqrt((diff*diff)/3);
+      cout << rmsd << " " << -log10(rmsd) << endl;
     }
   }
 
@@ -342,27 +359,32 @@ int main(int argc, char* argv[]) {
     //check op-op
     for(size_t j = i+1; j < N; ++j) {
       const auto diff = chkEMPforce(ops[i], ops[j], pos[i+3*N]-pos[j+3*N], epsf);
-      cout << sqrt((diff*diff)/3) << endl;
+      const real rmsd = sqrt((diff*diff)/3);
+      cout << rmsd << " " << -log10(rmsd) << endl;
     }
     //check op-mp
     for(size_t j = 0; j < N; ++j) {
       const auto diff = chkEMPforce(ops[i], mps[j], pos[i+3*N]-pos[j], epsf);
-      cout << sqrt((diff*diff)/3) << endl;
+      const real rmsd = sqrt((diff*diff)/3);
+      cout << rmsd << " " << -log10(rmsd) << endl;
     }
     //check op-dp
     for(size_t j = 0; j < N; ++j) {
       const auto diff = chkEMPforce(ops[i], dps[j], pos[i+3*N]-pos[j+N], epsf);
-      cout << sqrt((diff*diff)/3) << endl;
+      const real rmsd = sqrt((diff*diff)/3);
+      cout << rmsd << " " << -log10(rmsd) << endl;
     }
     //check op-quaop
     for(size_t j = 0; j < N; ++j) {
       const auto diff = chkEMPforce(ops[i], qps[j], pos[i+3*N]-pos[j+2*N], epsf);
-      cout << sqrt((diff*diff)/3) << endl;
+      const real rmsd = sqrt((diff*diff)/3);
+      cout << rmsd << " " << -log10(rmsd) << endl;
     }
     //check op-hexdecp
     for(size_t j = 0; j < N; ++j) {
       const auto diff = chkEMPforce(ops[i], hps[j], pos[i+3*N]-pos[j+4*N], epsf);
-      cout << sqrt((diff*diff)/3) << endl;
+      const real rmsd = sqrt((diff*diff)/3);
+      cout << rmsd << " " << -log10(rmsd) << endl;
     }
   }
 
@@ -371,32 +393,37 @@ int main(int argc, char* argv[]) {
     //check hp-hp
     for(size_t j = i+1; j < N; ++j) {
       const auto diff = chkEMPforce(hps[i], hps[j], pos[i+4*N]-pos[j+4*N], epsf);
-      cout << sqrt((diff*diff)/3) << endl;
+      const real rmsd = sqrt((diff*diff)/3);
+      cout << rmsd << " " << -log10(rmsd) << endl;
     }
     //check hp-mp
     for(size_t j = 0; j < N; ++j) {
       const auto diff = chkEMPforce(hps[i], mps[j], pos[i+4*N]-pos[j], epsf);
-      cout << sqrt((diff*diff)/3) << endl;
+      const real rmsd = sqrt((diff*diff)/3);
+      cout << rmsd << " " << -log10(rmsd) << endl;
     }
     //check hp-dp
     for(size_t j = 0; j < N; ++j) {
       const auto diff = chkEMPforce(hps[i], dps[j], pos[i+4*N]-pos[j+N], epsf);
-      cout << sqrt((diff*diff)/3) << endl;
+      const real rmsd = sqrt((diff*diff)/3);
+      cout << rmsd << " " << -log10(rmsd) << endl;
     }
     //check hp-quadp
     for(size_t j = 0; j < N; ++j) {
       const auto diff = chkEMPforce(hps[i], qps[j], pos[i+4*N]-pos[j+2*N], epsf);
-      cout << sqrt((diff*diff)/3) << endl;
+      const real rmsd = sqrt((diff*diff)/3);
+      cout << rmsd << " " << -log10(rmsd) << endl;
     }
     //check hp-octp
     for(size_t j = 0; j < N; ++j) {
       const auto diff = chkEMPforce(hps[i], ops[j], pos[i+4*N]-pos[j+3*N], epsf);
-      cout << sqrt((diff*diff)/3) << endl;
+      const real rmsd = sqrt((diff*diff)/3);
+      cout << rmsd << " " << -log10(rmsd) << endl;
     }
   }
 
   //then check torques
-  cout << "# Difference between analytic and numerical torques on site m (calculated with eps = "<<epst<<" \n";
+  cout << "# Difference and -log10(difference) between analytic and numerical torques (eps = "<<epst<<") \n";
   //monopole doesn't experience torque
 
   //dipole
@@ -404,27 +431,32 @@ int main(int argc, char* argv[]) {
     //check dp-dp
     for(size_t j = i+1; j < N; ++j) {
       const auto diff = chkEMPtorqm(dps[i], dps[j], pos[i+N]-pos[j+N], quatm, epst);
-      cout << sqrt((diff*diff)/3) << endl;
+      const real rmsd = sqrt((diff*diff)/3);
+      cout << rmsd << " " << -log10(rmsd) << endl;
     }
     //check dp-mp
     for(size_t j = 0; j < N; ++j) {
       const auto diff = chkEMPtorqm(dps[i], mps[j], pos[i+N]-pos[j], quatm, epst);
-      cout << sqrt((diff*diff)/3) << endl;
+      const real rmsd = sqrt((diff*diff)/3);
+      cout << rmsd << " " << -log10(rmsd) << endl;
     }
     //check dp-quadp
     for(size_t j = 0; j < N; ++j) {
       const auto diff = chkEMPtorqm(dps[i], qps[j], pos[i+N]-pos[j+2*N], quatm, epst);
-      cout << sqrt((diff*diff)/3) << endl;
+      const real rmsd = sqrt((diff*diff)/3);
+      cout << rmsd << " " << -log10(rmsd) << endl;
     }
     //check dp-octp
     for(size_t j = 0; j < N; ++j) {
       const auto diff = chkEMPtorqm(dps[i], ops[j], pos[i+N]-pos[j+3*N], quatm, epst);
-      cout << sqrt((diff*diff)/3) << endl;
+      const real rmsd = sqrt((diff*diff)/3);
+      cout << rmsd << " " << -log10(rmsd) << endl;
     }
     //check dp-hexdecp
     for(size_t j = 0; j < N; ++j) {
       const auto diff = chkEMPtorqm(dps[i], hps[j], pos[i+N]-pos[j+4*N], quatm, epst);
-      cout << sqrt((diff*diff)/3) << endl;
+      const real rmsd = sqrt((diff*diff)/3);
+      cout << rmsd << " " << -log10(rmsd) << endl;
     }
   }
 
@@ -433,27 +465,32 @@ int main(int argc, char* argv[]) {
     //check qp-qp
     for(size_t j = i+1; j < N; ++j) {
       const auto diff = chkEMPtorqm(qps[i], qps[j], pos[i+2*N]-pos[j+2*N], quatm, epst);
-      cout << sqrt((diff*diff)/3) << endl;
+      const real rmsd = sqrt((diff*diff)/3);
+      cout << rmsd << " " << -log10(rmsd) << endl;
     }
     //check qp-mp
     for(size_t j = 0; j < N; ++j) {
       const auto diff = chkEMPtorqm(qps[i], mps[j], pos[i+2*N]-pos[j], quatm, epst);
-      cout << sqrt((diff*diff)/3) << endl;
+      const real rmsd = sqrt((diff*diff)/3);
+      cout << rmsd << " " << -log10(rmsd) << endl;
     }
     //check qp-dp
     for(size_t j = 0; j < N; ++j) {
       const auto diff = chkEMPtorqm(qps[i], dps[j], pos[i+2*N]-pos[j+N], quatm, epst);
-      cout << sqrt((diff*diff)/3) << endl;
+      const real rmsd = sqrt((diff*diff)/3);
+      cout << rmsd << " " << -log10(rmsd) << endl;
     }
     //check qp-octp
     for(size_t j = 0; j < N; ++j) {
       const auto diff = chkEMPtorqm(qps[i], ops[j], pos[i+2*N]-pos[j+3*N], quatm, epst);
-      cout << sqrt((diff*diff)/3) << endl;
+      const real rmsd = sqrt((diff*diff)/3);
+      cout << rmsd << " " << -log10(rmsd) << endl;
     }
     //check qp-hexdecp
     for(size_t j = 0; j < N; ++j) {
       const auto diff = chkEMPtorqm(qps[i], hps[j], pos[i+2*N]-pos[j+4*N], quatm, epst);
-      cout << sqrt((diff*diff)/3) << endl;
+      const real rmsd = sqrt((diff*diff)/3);
+      cout << rmsd << " " << -log10(rmsd) << endl;
     }
   }
 
@@ -462,27 +499,32 @@ int main(int argc, char* argv[]) {
     //check op-op
     for(size_t j = i+1; j < N; ++j) {
       const auto diff = chkEMPtorqm(ops[i], ops[j], pos[i+3*N]-pos[j+3*N], quatm, epst);
-      cout << sqrt((diff*diff)/3) << endl;
+      const real rmsd = sqrt((diff*diff)/3);
+      cout << rmsd << " " << -log10(rmsd) << endl;
     }
     //check op-mp
     for(size_t j = 0; j < N; ++j) {
       const auto diff = chkEMPtorqm(ops[i], mps[j], pos[i+3*N]-pos[j], quatm, epst);
-      cout << sqrt((diff*diff)/3) << endl;
+      const real rmsd = sqrt((diff*diff)/3);
+      cout << rmsd << " " << -log10(rmsd) << endl;
     }
     //check op-dp
     for(size_t j = 0; j < N; ++j) {
       const auto diff = chkEMPtorqm(ops[i], dps[j], pos[i+3*N]-pos[j+N], quatm, epst);
-      cout << sqrt((diff*diff)/3) << endl;
+      const real rmsd = sqrt((diff*diff)/3);
+      cout << rmsd << " " << -log10(rmsd) << endl;
     }
     //check op-quaop
     for(size_t j = 0; j < N; ++j) {
       const auto diff = chkEMPtorqm(ops[i], qps[j], pos[i+3*N]-pos[j+2*N], quatm, epst);
-      cout << sqrt((diff*diff)/3) << endl;
+      const real rmsd = sqrt((diff*diff)/3);
+      cout << rmsd << " " << -log10(rmsd) << endl;
     }
     //check op-hexdecp
     for(size_t j = 0; j < N; ++j) {
       const auto diff = chkEMPtorqm(ops[i], hps[j], pos[i+3*N]-pos[j+4*N], quatm, epst);
-      cout << sqrt((diff*diff)/3) << endl;
+      const real rmsd = sqrt((diff*diff)/3);
+      cout << rmsd << " " << -log10(rmsd) << endl;
     }
   }
 
@@ -491,27 +533,32 @@ int main(int argc, char* argv[]) {
     //check hp-hp
     for(size_t j = i+1; j < N; ++j) {
       const auto diff = chkEMPtorqm(hps[i], hps[j], pos[i+4*N]-pos[j+4*N], quatm, epst);
-      cout << sqrt((diff*diff)/3) << endl;
+      const real rmsd = sqrt((diff*diff)/3);
+      cout << rmsd << " " << -log10(rmsd) << endl;
     }
     //check hp-mp
     for(size_t j = 0; j < N; ++j) {
       const auto diff = chkEMPtorqm(hps[i], mps[j], pos[i+4*N]-pos[j], quatm, epst);
-      cout << sqrt((diff*diff)/3) << endl;
+      const real rmsd = sqrt((diff*diff)/3);
+      cout << rmsd << " " << -log10(rmsd) << endl;
     }
     //check hp-dp
     for(size_t j = 0; j < N; ++j) {
       const auto diff = chkEMPtorqm(hps[i], dps[j], pos[i+4*N]-pos[j+N], quatm, epst);
-      cout << sqrt((diff*diff)/3) << endl;
+      const real rmsd = sqrt((diff*diff)/3);
+      cout << rmsd << " " << -log10(rmsd) << endl;
     }
     //check hp-quadp
     for(size_t j = 0; j < N; ++j) {
       const auto diff = chkEMPtorqm(hps[i], qps[j], pos[i+4*N]-pos[j+2*N], quatm, epst);
-      cout << sqrt((diff*diff)/3) << endl;
+      const real rmsd = sqrt((diff*diff)/3);
+      cout << rmsd << " " << -log10(rmsd) << endl;
     }
     //check hp-octp
     for(size_t j = 0; j < N; ++j) {
       const auto diff = chkEMPtorqm(hps[i], ops[j], pos[i+4*N]-pos[j+3*N], quatm, epst);
-      cout << sqrt((diff*diff)/3) << endl;
+      const real rmsd = sqrt((diff*diff)/3);
+      cout << rmsd << " " << -log10(rmsd) << endl;
     }
   }
 }
